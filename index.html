@@ -94,36 +94,45 @@ document.getElementById('resultBox').classList.add('hidden');
 revealed=[];
 }
 
+function computePaths(n,rows,grid){
+let ps=[];
+for(let start=0;start<n;start++){
+let path=[];
+let x=start;
+for(let r=0;r<rows;r++){
+if(x>0&&grid[r][x-1]){path.push({x,r,dir:'left'});x--;}
+else if(x<n-1&&grid[r][x]){path.push({x,r,dir:'right'});x++;}
+else{path.push({x,r,dir:'down'});}
+}
+path.push({x,r:rows,dir:'end'});
+ps.push({steps:path,end:x});
+}
+return ps;
+}
 function generateLadder(n){
 cols=n;
 const rows=8;
+let attempts=0;
+// keep generating until all paths end at unique columns (valid permutation)
+do{
 ladders=[];
 for(let r=0;r<rows;r++){
 let row=[];
 for(let c=0;c<cols-1;c++){
-row.push(Math.random()<0.45);
+// no two adjacent bridges on same row
+row.push(c>0&&row[c-1]?false:Math.random()<0.45);
 }
 ladders.push(row);
 }
-// ensure at least one bridge per column pair
 for(let c=0;c<cols-1;c++){
 let has=ladders.some(r=>r[c]);
 if(!has)ladders[Math.floor(Math.random()*rows)][c]=true;
 }
-// precompute paths
-paths=[];
-for(let start=0;start<cols;start++){
-let path=[];
-let x=start,segStart=0;
-for(let r=0;r<rows;r++){
-let moved=false;
-if(x>0&&ladders[r][x-1]){path.push({x,r,dir:'left'});x--;moved=true;}
-else if(x<cols-1&&ladders[r][x]){path.push({x,r,dir:'right'});x++;moved=true;}
-else{path.push({x,r,dir:'down'});}
-}
-path.push({x,r:rows,dir:'end'});
-paths.push({steps:path,end:x});
-}
+paths=computePaths(n,rows,ladders);
+let ends=paths.map(p=>p.end);
+attempts++;
+if(new Set(ends).size===n)break;
+}while(attempts<500);
 }
 
 function drawLadder(){
